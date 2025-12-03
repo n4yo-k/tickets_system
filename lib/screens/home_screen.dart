@@ -27,14 +27,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
     super.initState();
     _authService = AuthService(Supabase.instance.client);
     _currentUser = _authService.getCurrentUser();
-    
+
     _fadeController = AnimationController(
       duration: ThemeUtils.mediumDuration,
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(begin: 0, end: 1).animate(
-      CurvedAnimation(parent: _fadeController, curve: Curves.easeIn),
-    );
+    _fadeAnimation = Tween<double>(
+      begin: 0,
+      end: 1,
+    ).animate(CurvedAnimation(parent: _fadeController, curve: Curves.easeIn));
     _fadeController.forward();
   }
 
@@ -73,7 +74,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                 );
               }
             },
-            child: const Text('Cerrar sesión', style: TextStyle(color: Colors.red)),
+            child: const Text(
+              'Cerrar sesión',
+              style: TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -140,7 +144,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
               flexibleSpace: FlexibleSpaceBar(
                 title: const Text(
                   'Sistema de Tickets',
-                  style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black87),
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
                 background: Container(color: Colors.white),
               ),
@@ -151,7 +158,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     child: Center(
                       child: Text(
                         _currentUser!.email!.split('@')[0],
-                        style: const TextStyle(fontSize: 12, color: Colors.black87),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.black87,
+                        ),
                       ),
                     ),
                   ),
@@ -173,7 +183,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          colors: [Colors.blue.shade400, Colors.purple.shade400],
+                          colors: [
+                            Colors.blue.shade400,
+                            Colors.purple.shade400,
+                          ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
@@ -207,9 +220,15 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                       stream: _buildClientTicketsStream(),
                       builder: (context, snapshot) {
                         final tickets = snapshot.data ?? [];
-                        final openCount = tickets.where((t) => t.status == 'abierto').length;
-                        final inProgressCount = tickets.where((t) => t.status == 'en_progreso').length;
-                        final closedCount = tickets.where((t) => t.status == 'cerrado').length;
+                        final openCount = tickets
+                            .where((t) => t.status == 'abierto')
+                            .length;
+                        final inProgressCount = tickets
+                            .where((t) => t.status == 'en_progreso')
+                            .length;
+                        final closedCount = tickets
+                            .where((t) => t.status == 'cerrado')
+                            .length;
 
                         return Row(
                           children: [
@@ -247,7 +266,10 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                     // Acciones Rápidas
                     const Text(
                       'Acciones Rápidas',
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     // Botón crear
@@ -259,17 +281,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Navigator.push(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                const TicketsListScreen(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              return SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(1, 0),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              );
-                            },
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const TicketsListScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  return SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(1, 0),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  );
+                                },
                           ),
                         );
                       },
@@ -289,17 +318,24 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                         Navigator.push(
                           context,
                           PageRouteBuilder(
-                            pageBuilder: (context, animation, secondaryAnimation) =>
-                                const TicketsListScreen(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              return SlideTransition(
-                                position: Tween<Offset>(
-                                  begin: const Offset(1, 0),
-                                  end: Offset.zero,
-                                ).animate(animation),
-                                child: child,
-                              );
-                            },
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    const TicketsListScreen(),
+                            transitionsBuilder:
+                                (
+                                  context,
+                                  animation,
+                                  secondaryAnimation,
+                                  child,
+                                ) {
+                                  return SlideTransition(
+                                    position: Tween<Offset>(
+                                      begin: const Offset(1, 0),
+                                      end: Offset.zero,
+                                    ).animate(animation),
+                                    child: child,
+                                  );
+                                },
                           ),
                         );
                       },
@@ -384,12 +420,18 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
@@ -435,10 +477,7 @@ class _HomeScreenState extends State<HomeScreen> with TickerProviderStateMixin {
                   const SizedBox(height: 4),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontSize: 12,
-                    ),
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                 ],
               ),

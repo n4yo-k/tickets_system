@@ -81,14 +81,11 @@ class TicketService {
   Future<void> updateTicketStatus(String ticketId, String newStatus) async {
     try {
       debugPrint('🔧 Actualizando estado del ticket $ticketId a $newStatus');
-      
+
       // Usar RPC para mayor seguridad (similar a assignTicketToTechnician)
       final response = await _supabaseClient.rpc(
         'update_ticket_status',
-        params: {
-          'p_ticket_id': ticketId,
-          'p_new_status': newStatus,
-        },
+        params: {'p_ticket_id': ticketId, 'p_new_status': newStatus},
       );
 
       debugPrint('✅ Respuesta RPC: $response');
@@ -115,10 +112,7 @@ class TicketService {
   // Eliminar ticket
   Future<void> deleteTicket(String ticketId) async {
     try {
-      await _supabaseClient
-          .from('tickets')
-          .delete()
-          .eq('id', ticketId);
+      await _supabaseClient.from('tickets').delete().eq('id', ticketId);
     } catch (e) {
       throw Exception('Error al eliminar ticket: $e');
     }
@@ -136,19 +130,22 @@ class TicketService {
       final timestamp = DateTime.now().millisecondsSinceEpoch;
       // Sanitizar nombre del archivo: remover espacios y caracteres especiales
       final sanitizedName = imageFile.name
-          .replaceAll(RegExp(r'[^\w\.]'), '_') // Reemplazar caracteres especiales
-          .replaceAll(RegExp(r'_+'), '_')      // Reemplazar múltiples _ por uno solo
+          .replaceAll(
+            RegExp(r'[^\w\.]'),
+            '_',
+          ) // Reemplazar caracteres especiales
+          .replaceAll(RegExp(r'_+'), '_') // Reemplazar múltiples _ por uno solo
           .toLowerCase();
-      
+
       final fileName = '${timestamp}_$sanitizedName';
-      
+
       debugPrint('Iniciando upload de imagen: $fileName');
       debugPrint('Usuario ID: $userId');
-      
+
       // Leer bytes del archivo
       final imageBytes = await imageFile.readAsBytes();
       debugPrint('Tamaño de archivo: ${imageBytes.length} bytes');
-      
+
       try {
         // Subir a Supabase Storage
         final storagePath = await _supabaseClient.storage
@@ -167,7 +164,7 @@ class TicketService {
         // Guardar solo el nombre del archivo (más corto)
         // La URL completa se construirá cuando se necesite mostrar
         debugPrint('Archivo guardado para BD: $fileName');
-        
+
         return fileName;
       } catch (storageError) {
         debugPrint('Error en storage: $storageError');
@@ -176,18 +173,27 @@ class TicketService {
     } catch (e) {
       final errorMessage = e.toString();
       debugPrint('Error al subir imagen: $errorMessage');
-      
+
       // Mensajes de error personalizados
-      if (errorMessage.contains('403') || errorMessage.contains('Unauthorized')) {
-        throw Exception('No tienes permiso para subir imágenes. '
-            'Asegúrate de que las políticas RLS del bucket están configuradas correctamente.');
-      } else if (errorMessage.contains('bucket') || errorMessage.contains('not found')) {
-        throw Exception('El bucket "ticket-images" no existe. '
-            'Por favor, créalo en Supabase Storage primero.');
-      } else if (errorMessage.contains('size') || errorMessage.contains('quota')) {
-        throw Exception('La imagen es muy grande. Intenta con una imagen más pequeña.');
+      if (errorMessage.contains('403') ||
+          errorMessage.contains('Unauthorized')) {
+        throw Exception(
+          'No tienes permiso para subir imágenes. '
+          'Asegúrate de que las políticas RLS del bucket están configuradas correctamente.',
+        );
+      } else if (errorMessage.contains('bucket') ||
+          errorMessage.contains('not found')) {
+        throw Exception(
+          'El bucket "ticket-images" no existe. '
+          'Por favor, créalo en Supabase Storage primero.',
+        );
+      } else if (errorMessage.contains('size') ||
+          errorMessage.contains('quota')) {
+        throw Exception(
+          'La imagen es muy grande. Intenta con una imagen más pequeña.',
+        );
       }
-      
+
       throw Exception('Error al subir imagen: $errorMessage');
     }
   }
@@ -249,7 +255,7 @@ class TicketService {
         debugPrint('✅ Técnico encontrado en tabla technicians: $technicianId');
       } catch (e) {
         debugPrint('⚠️ No encontrado en technicians, buscando fallback...');
-        
+
         // Fallback: obtener ID del técnico desde profiles
         try {
           final profileResponse = await _supabaseClient
@@ -273,19 +279,21 @@ class TicketService {
       // Obtener tickets asignados a este técnico
       debugPrint('🎫 Buscando tickets asignados a técnico: $technicianId');
       debugPrint('🆔 User ID logueado: $userId');
-      
+
       // Primero, obtener TODOS los tickets para ver cuáles tienen assigned_to
       final allTickets = await _supabaseClient
           .from('tickets')
           .select('id, title, assigned_to')
           .order('created_at', ascending: false);
-      
+
       debugPrint('📊 Total de tickets en BD: ${(allTickets as List).length}');
       for (var ticket in allTickets as List) {
         final assignedTo = ticket['assigned_to'];
-        debugPrint('   - ${ticket['title']} | assigned_to: $assignedTo (tipo: ${assignedTo?.runtimeType})');
+        debugPrint(
+          '   - ${ticket['title']} | assigned_to: $assignedTo (tipo: ${assignedTo?.runtimeType})',
+        );
       }
-      
+
       // Ahora hacer la búsqueda con el filtro
       debugPrint('🔎 Filtrando por assigned_to = "$technicianId"...');
       final response = await _supabaseClient
@@ -298,9 +306,13 @@ class TicketService {
           .map((e) => Ticket.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      debugPrint('📋 Se encontraron ${tickets.length} tickets asignados al técnico');
+      debugPrint(
+        '📋 Se encontraron ${tickets.length} tickets asignados al técnico',
+      );
       if (tickets.isEmpty) {
-        debugPrint('⚠️ No hay coincidencias. Verifica que assigned_to coincida exactamente con: $technicianId');
+        debugPrint(
+          '⚠️ No hay coincidencias. Verifica que assigned_to coincida exactamente con: $technicianId',
+        );
       }
       return tickets;
     } catch (e) {
@@ -309,4 +321,3 @@ class TicketService {
     }
   }
 }
-

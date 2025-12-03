@@ -35,6 +35,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
       appBar: AppBar(
         title: const Text('Actualizar Estado'),
         centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black87,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -45,7 +48,8 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Colors.grey.shade50,
+                border: Border.all(color: Colors.grey.shade200),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -57,14 +61,36 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Row(
                     children: [
-                      const Text('Estado actual: '),
-                      Chip(
-                        label: Text(widget.ticket.status),
-                        backgroundColor: _getStatusColor(widget.ticket.status),
+                      const Text(
+                        'Estado actual: ',
+                        style: TextStyle(color: Colors.grey),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: _getStatusColor(widget.ticket.status)
+                              .withValues(alpha: 0.1),
+                          border: Border.all(
+                            color: _getStatusColor(widget.ticket.status),
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          widget.ticket.status.toUpperCase(),
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: _getStatusColor(widget.ticket.status),
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -75,9 +101,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
             // Seleccionar nuevo estado
             Text(
               'Seleccionar nuevo estado',
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 12),
             ListView.builder(
@@ -88,45 +114,98 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                 final status = _availableStatuses[index];
                 final isSelected = _selectedStatus == status;
 
-                return Card(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  child: ListTile(
-                    // ignore: deprecated_member_use
-                    leading: Radio<String>(
-                      // ignore: deprecated_member_use
-                      value: status,
-                      // ignore: deprecated_member_use
-                      groupValue: _selectedStatus,
-                      // ignore: deprecated_member_use
-                      onChanged: (value) {
-                        if (value != null) {
-                          setState(() => _selectedStatus = value);
-                        }
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Material(
+                    child: InkWell(
+                      onTap: () {
+                        setState(() => _selectedStatus = status);
                       },
+                      child: Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? _getStatusColor(status).withValues(alpha: 0.1)
+                              : Colors.white,
+                          border: Border.all(
+                            color: isSelected
+                                ? _getStatusColor(status)
+                                : Colors.grey.shade200,
+                            width: isSelected ? 2 : 1,
+                          ),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: _getStatusColor(status),
+                                  width: 2,
+                                ),
+                                color: isSelected
+                                    ? _getStatusColor(status)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    status.toUpperCase(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: _getStatusColor(status),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    _getStatusDescription(status),
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    title: Text(status.toUpperCase()),
-                    subtitle: Text(_getStatusDescription(status)),
-                    tileColor: isSelected
-                        ? _getStatusColor(status).withValues(alpha: 0.1)
-                        : null,
                   ),
                 );
               },
             ),
             const SizedBox(height: 24),
-            // Botón guardar
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _isLoading ? null : _updateStatus,
-                child: _isLoading
-                    ? const SizedBox(
-                        height: 20,
-                        width: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('Actualizar Estado'),
-              ),
+            // Botones
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _isLoading ? null : () => Navigator.pop(context),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: _isLoading ? null : _updateStatus,
+                    child: _isLoading
+                        ? const SizedBox(
+                            height: 20,
+                            width: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Actualizar Estado'),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -166,9 +245,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) {

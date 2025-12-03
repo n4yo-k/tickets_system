@@ -20,12 +20,14 @@ class AdminService {
             .eq('status', 'activo');
 
         debugPrint('📋 Respuesta tabla technicians: $response');
-        
+
         final technicians = (response as List)
             .map((e) => Technician.fromJson(e as Map<String, dynamic>))
             .toList();
 
-        debugPrint('✅ Técnicos obtenidos desde technicians: ${technicians.length}');
+        debugPrint(
+          '✅ Técnicos obtenidos desde technicians: ${technicians.length}',
+        );
         if (technicians.isNotEmpty) {
           for (var tech in technicians) {
             debugPrint('   - ${tech.fullName} (${tech.email})');
@@ -59,7 +61,9 @@ class AdminService {
           );
         }).toList();
 
-        debugPrint('✅ Técnicos obtenidos desde profiles: ${technicians.length}');
+        debugPrint(
+          '✅ Técnicos obtenidos desde profiles: ${technicians.length}',
+        );
         for (var tech in technicians) {
           debugPrint('   - ${tech.fullName} (${tech.email})');
         }
@@ -95,15 +99,14 @@ class AdminService {
         throw Exception('ID del técnico no puede ser null');
       }
 
-      debugPrint('🔧 Usando RPC para asignar ticket $ticketId a técnico $technicianId');
+      debugPrint(
+        '🔧 Usando RPC para asignar ticket $ticketId a técnico $technicianId',
+      );
 
       // Llamar función RPC (más seguro que UPDATE directo)
       final response = await _supabaseClient.rpc(
         'assign_ticket_to_technician',
-        params: {
-          'p_ticket_id': ticketId,
-          'p_technician_id': technicianId,
-        },
+        params: {'p_ticket_id': ticketId, 'p_technician_id': technicianId},
       );
 
       debugPrint('✅ Respuesta RPC: $response');

@@ -145,9 +145,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               // Título
               Text(
                 'Título *',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -159,7 +159,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   filled: true,
                   fillColor: Colors.grey.shade50,
                 ),
@@ -177,9 +180,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               // Categoría
               Text(
                 'Categoría *',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Row(
@@ -189,29 +192,40 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
-                        onTap: () => setState(() => _selectedCategory = category),
+                        onTap: () =>
+                            setState(() => _selectedCategory = category),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: isSelected ? Colors.blue : Colors.grey.shade100,
+                            color: isSelected
+                                ? Colors.blue
+                                : Colors.grey.shade100,
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: isSelected ? Colors.blue : Colors.grey.shade300,
+                              color: isSelected
+                                  ? Colors.blue
+                                  : Colors.grey.shade300,
                             ),
                           ),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
-                                category == 'Tecnología' ? Icons.computer : Icons.business,
-                                color: isSelected ? Colors.white : Colors.grey.shade600,
+                                category == 'Tecnología'
+                                    ? Icons.computer
+                                    : Icons.business,
+                                color: isSelected
+                                    ? Colors.white
+                                    : Colors.grey.shade600,
                                 size: 18,
                               ),
                               const SizedBox(width: 6),
                               Text(
                                 category,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : Colors.grey.shade600,
+                                  color: isSelected
+                                      ? Colors.white
+                                      : Colors.grey.shade600,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 12,
                                 ),
@@ -228,9 +242,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               // Prioridad
               Text(
                 'Prioridad *',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               Row(
@@ -241,11 +255,14 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     child: Padding(
                       padding: const EdgeInsets.only(right: 8),
                       child: GestureDetector(
-                        onTap: () => setState(() => _selectedPriority = priority),
+                        onTap: () =>
+                            setState(() => _selectedPriority = priority),
                         child: Container(
                           padding: const EdgeInsets.symmetric(vertical: 10),
                           decoration: BoxDecoration(
-                            color: isSelected ? color : color.withValues(alpha: 0.1),
+                            color: isSelected
+                                ? color
+                                : color.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
                               color: color.withValues(alpha: 0.5),
@@ -272,9 +289,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               // Descripción
               Text(
                 'Descripción *',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               TextFormField(
@@ -286,7 +303,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                     borderRadius: BorderRadius.circular(8),
                     borderSide: BorderSide(color: Colors.grey.shade300),
                   ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 12,
+                  ),
                   filled: true,
                   fillColor: Colors.grey.shade50,
                 ),
@@ -305,9 +325,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
               // Imagen adjunta (opcional)
               Text(
                 'Imagen (opcional)',
-                style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.labelLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 8),
               if (_selectedImage == null)
@@ -316,7 +336,10 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 24),
                     decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade300, style: BorderStyle.solid),
+                      border: Border.all(
+                        color: Colors.grey.shade300,
+                        style: BorderStyle.solid,
+                      ),
                       borderRadius: BorderRadius.circular(8),
                       color: Colors.grey.shade50,
                     ),
@@ -350,7 +373,11 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.check_circle, color: Colors.green.shade600, size: 28),
+                      Icon(
+                        Icons.check_circle,
+                        color: Colors.green.shade600,
+                        size: 28,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
@@ -413,7 +440,9 @@ class _CreateTicketScreenState extends State<CreateTicketScreen> {
                           width: 20,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.white,
+                            ),
                           ),
                         )
                       : const Text(

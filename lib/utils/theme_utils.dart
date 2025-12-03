@@ -23,7 +23,10 @@ class ThemeUtils {
   );
 
   // Decoraciones comunes
-  static BoxDecoration getGradientDecoration(LinearGradient gradient, {double radius = 16}) {
+  static BoxDecoration getGradientDecoration(
+    LinearGradient gradient, {
+    double radius = 16,
+  }) {
     return BoxDecoration(
       gradient: gradient,
       borderRadius: BorderRadius.circular(radius),
@@ -37,7 +40,10 @@ class ThemeUtils {
     );
   }
 
-  static BoxDecoration getCardDecoration({double radius = 16, bool elevated = true}) {
+  static BoxDecoration getCardDecoration({
+    double radius = 16,
+    bool elevated = true,
+  }) {
     return BoxDecoration(
       color: Colors.white,
       borderRadius: BorderRadius.circular(radius),
@@ -76,7 +82,8 @@ class AnimatedContainerButton extends StatefulWidget {
   });
 
   @override
-  State<AnimatedContainerButton> createState() => _AnimatedContainerButtonState();
+  State<AnimatedContainerButton> createState() =>
+      _AnimatedContainerButtonState();
 }
 
 class _AnimatedContainerButtonState extends State<AnimatedContainerButton>
@@ -91,9 +98,10 @@ class _AnimatedContainerButtonState extends State<AnimatedContainerButton>
       duration: ThemeUtils.shortDuration,
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _scaleAnimation = Tween<double>(
+      begin: 1.0,
+      end: 0.95,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -203,9 +211,10 @@ class _ModernCardState extends State<ModernCard>
       duration: ThemeUtils.shortDuration,
       vsync: this,
     );
-    _elevationAnimation = Tween<double>(begin: 2, end: 8).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _elevationAnimation = Tween<double>(
+      begin: 2,
+      end: 8,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override
@@ -239,10 +248,7 @@ class _ModernCardState extends State<ModernCard>
               child: InkWell(
                 onTap: widget.onTap,
                 borderRadius: BorderRadius.circular(16),
-                child: Padding(
-                  padding: widget.padding,
-                  child: widget.child,
-                ),
+                child: Padding(padding: widget.padding, child: widget.child),
               ),
             ),
           );

@@ -77,7 +77,9 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
 
           // Aplicar filtro
           if (_selectedFilter != 'todos') {
-            tickets = tickets.where((t) => t.status == _selectedFilter).toList();
+            tickets = tickets
+                .where((t) => t.status == _selectedFilter)
+                .toList();
           }
 
           if (tickets.isEmpty) {
@@ -101,15 +103,15 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                   Text(
                     'No tienes tickets creados',
                     style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Crea uno para solicitar soporte',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.grey,
-                        ),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodyMedium?.copyWith(color: Colors.grey),
                   ),
                   const SizedBox(height: 32),
                   AnimatedContainerButton(
@@ -119,20 +121,21 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                     onPressed: () {
                       Navigator.of(context).push(
                         PageRouteBuilder(
-                          pageBuilder: (context, animation, secondaryAnimation) =>
-                              const CreateTicketScreen(),
+                          pageBuilder:
+                              (context, animation, secondaryAnimation) =>
+                                  const CreateTicketScreen(),
                           transitionsBuilder:
                               (context, animation, secondaryAnimation, child) {
-                            return SlideTransition(
-                              position: animation.drive(
-                                Tween(
-                                  begin: const Offset(0, 1),
-                                  end: Offset.zero,
-                                ),
-                              ),
-                              child: child,
-                            );
-                          },
+                                return SlideTransition(
+                                  position: animation.drive(
+                                    Tween(
+                                      begin: const Offset(0, 1),
+                                      end: Offset.zero,
+                                    ),
+                                  ),
+                                  child: child,
+                                );
+                              },
                         ),
                       );
                     },
@@ -147,10 +150,16 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
               // Filtros
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 12,
+                ),
                 child: Row(
                   children: [
-                    _buildFilterChip('todos', 'Todos (${snapshot.data?.length ?? 0})'),
+                    _buildFilterChip(
+                      'todos',
+                      'Todos (${snapshot.data?.length ?? 0})',
+                    ),
                     _buildFilterChip('abierto', 'Abiertos'),
                     _buildFilterChip('en_progreso', 'En Progreso'),
                     _buildFilterChip('cerrado', 'Cerrados'),
@@ -160,7 +169,10 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
               // Lista de tickets
               Expanded(
                 child: ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 8,
+                    horizontal: 12,
+                  ),
                   itemCount: tickets.length,
                   itemBuilder: (context, index) {
                     final ticket = tickets[index];
@@ -194,16 +206,13 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                     const CreateTicketScreen(),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
-                  return SlideTransition(
-                    position: animation.drive(
-                      Tween(
-                        begin: const Offset(0, 1),
-                        end: Offset.zero,
-                      ),
-                    ),
-                    child: child,
-                  );
-                },
+                      return SlideTransition(
+                        position: animation.drive(
+                          Tween(begin: const Offset(0, 1), end: Offset.zero),
+                        ),
+                        child: child,
+                      );
+                    },
               ),
             );
           },
@@ -229,9 +238,7 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
           color: isSelected ? Colors.white : Colors.black87,
           fontWeight: FontWeight.w600,
         ),
-        side: BorderSide(
-          color: isSelected ? Colors.blue : Colors.transparent,
-        ),
+        side: BorderSide(color: isSelected ? Colors.blue : Colors.transparent),
       ),
     );
   }
@@ -251,16 +258,13 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                     TicketDetailScreen(ticket: ticket),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
-                  return SlideTransition(
-                    position: animation.drive(
-                      Tween(
-                        begin: const Offset(1, 0),
-                        end: Offset.zero,
-                      ),
-                    ),
-                    child: child,
-                  );
-                },
+                      return SlideTransition(
+                        position: animation.drive(
+                          Tween(begin: const Offset(1, 0), end: Offset.zero),
+                        ),
+                        child: child,
+                      );
+                    },
               ),
             );
           },
@@ -277,8 +281,8 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                     child: Text(
                       ticket.title,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -299,8 +303,9 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
-                          color: _getStatusColor(ticket.status)
-                              .withValues(alpha: 0.3),
+                          color: _getStatusColor(
+                            ticket.status,
+                          ).withValues(alpha: 0.3),
                           blurRadius: 4,
                         ),
                       ],
@@ -320,9 +325,9 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
               // Descripción
               Text(
                 ticket.description,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: Colors.grey.shade600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodySmall?.copyWith(color: Colors.grey.shade600),
                 maxLines: 2,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -360,12 +365,14 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: _getPriorityColor(ticket.priority)
-                          .withValues(alpha: 0.1),
+                      color: _getPriorityColor(
+                        ticket.priority,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: _getPriorityColor(ticket.priority)
-                            .withValues(alpha: 0.3),
+                        color: _getPriorityColor(
+                          ticket.priority,
+                        ).withValues(alpha: 0.3),
                       ),
                     ),
                     child: Text(
@@ -381,9 +388,9 @@ class _TicketsListScreenState extends State<TicketsListScreen> {
                   Text(
                     _formatDate(ticket.createdAt),
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.grey.shade500,
-                          fontSize: 11,
-                        ),
+                      color: Colors.grey.shade500,
+                      fontSize: 11,
+                    ),
                   ),
                 ],
               ),

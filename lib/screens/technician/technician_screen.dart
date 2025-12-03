@@ -45,47 +45,75 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
             ),
         ],
       ),
-      body: Column(
-        children: [
-          // Filtros
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.all(12),
-            child: Row(
+      body: StreamBuilder<List<Ticket>>(
+        stream: _buildTechnicianTicketsStream(),
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          if (snapshot.hasError) {
+            return Center(child: Text('Error: ${snapshot.error}'));
+          }
+
+          var allTickets = snapshot.data ?? [];
+
+          // Contar tickets por estado
+          final totalAssigned = allTickets.length;
+          final inProgress = allTickets.where((t) => t.status == 'en_progreso').length;
+
+          // Aplicar filtro
+          if (_selectedFilter != 'todos') {
+            allTickets = allTickets.where((t) => t.status == _selectedFilter).toList();
+          }
+
+          return SingleChildScrollView(
+            child: Column(
               children: [
-                _buildFilterChip('todos', 'Todos'),
-                _buildFilterChip('abierto', 'Abiertos'),
-                _buildFilterChip('en_progreso', 'En Progreso'),
-                _buildFilterChip('cerrado', 'Resueltos'),
-              ],
-            ),
-          ),
-          // Lista de tickets
-          Expanded(
-            child: StreamBuilder<List<Ticket>>(
-              stream: _buildTechnicianTicketsStream(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
-                }
-
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
-
-                var tickets = snapshot.data ?? [];
-
-                // Aplicar filtro
-                if (_selectedFilter != 'todos') {
-                  tickets = tickets
-                      .where((t) => t.status == _selectedFilter)
-                      .toList();
-                }
-
-                if (tickets.isEmpty) {
-                  return Center(
+                // Tarjetas de estado
+                Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: _buildStatusCard(
+                          title: 'Total Asignados',
+                          count: totalAssigned,
+                          icon: Icons.assignment,
+                          color: Colors.blue,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatusCard(
+                          title: 'En Progreso',
+                          count: inProgress,
+                          icon: Icons.hourglass_bottom,
+                          color: Colors.orange,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Filtros
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Row(
+                    children: [
+                      _buildFilterChip('todos', 'Todos', snapshot.data?.length ?? 0),
+                      _buildFilterChip('abierto', 'Abiertos', snapshot.data?.where((t) => t.status == 'abierto').length ?? 0),
+                      _buildFilterChip('en_progreso', 'En Progreso', inProgress),
+                      _buildFilterChip('cerrado', 'Resueltos', snapshot.data?.where((t) => t.status == 'cerrado').length ?? 0),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Lista de tickets
+                if (allTickets.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 60),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.inbox,
@@ -93,54 +121,79 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                           color: Colors.grey.shade300,
                         ),
                         const SizedBox(height: 16),
-                        const Text('No hay tickets asignados'),
+                        const Text('No hay tickets en esta categoría'),
                       ],
                     ),
-                  );
-                }
+                  )
+                else
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    itemCount: allTickets.length,
+                    itemBuilder: (context, index) {
+                      final ticket = allTickets[index];
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildTicketCard(ticket),
+                      );
+                    },
+                  ),
+                const SizedBox(height: 16),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(12),
-                  itemCount: tickets.length,
-                  itemBuilder: (context, index) {
-                    final ticket = tickets[index];
-                    return Card(
-                      margin: const EdgeInsets.only(bottom: 12),
-                      child: ListTile(
-                        title: Text(ticket.title),
-                        subtitle: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const SizedBox(height: 4),
-                            Text(ticket.description),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                Chip(
-                                  label: Text(ticket.category),
-                                  backgroundColor: Colors.blue.shade100,
-                                  labelStyle: const TextStyle(fontSize: 10),
-                                ),
-                                const SizedBox(width: 4),
-                                Chip(
-                                  label: Text(ticket.priority),
-                                  backgroundColor: _getPriorityColor(ticket.priority),
-                                  labelStyle: const TextStyle(fontSize: 10),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                        trailing: Chip(
-                          label: Text(ticket.status),
-                          backgroundColor: _getStatusColor(ticket.status),
-                        ),
-                        onTap: () => _openTicketDetail(ticket),
-                      ),
-                    );
-                  },
-                );
-              },
+  Widget _buildStatusCard({
+    required String title,
+    required int count,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade600,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            count.toString(),
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.bold,
+              color: color,
             ),
           ),
         ],
@@ -148,16 +201,155 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
     );
   }
 
-  Widget _buildFilterChip(String value, String label) {
+  Widget _buildTicketCard(Ticket ticket) {
+    return GestureDetector(
+      onTap: () => _openTicketDetail(ticket),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          border: Border.all(color: Colors.grey.shade200),
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            ticket.title,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Cliente: ${ticket.userId}',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
+                        border: Border.all(color: _getStatusColor(ticket.status)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        ticket.status,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: _getStatusColor(ticket.status),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  ticket.description,
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.grey.shade700,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        border: Border.all(color: Colors.blue.shade200),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        ticket.category,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.blue.shade700,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(ticket.priority).withValues(alpha: 0.2),
+                        border: Border.all(color: _getPriorityColor(ticket.priority)),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        ticket.priority,
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: _getPriorityColor(ticket.priority),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      '${ticket.createdAt.day}/${ticket.createdAt.month}/${ticket.createdAt.year}',
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade500,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterChip(String value, String label, int count) {
     final isSelected = _selectedFilter == value;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: FilterChip(
-        label: Text(label),
+        label: Text('$label ($count)'),
         selected: isSelected,
         onSelected: (selected) {
           setState(() => _selectedFilter = value);
         },
+        backgroundColor: isSelected ? Colors.blue.shade50 : Colors.white,
+        selectedColor: Colors.blue.shade100,
+        side: BorderSide(
+          color: isSelected ? Colors.blue : Colors.grey.shade300,
+        ),
       ),
     );
   }
@@ -181,6 +373,33 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Información del cliente
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.blue.shade50,
+                        border: Border.all(color: Colors.blue.shade200),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Información del Cliente',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.blue.shade700,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'ID: ${ticket.userId}',
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     // Estado actual
                     Container(
                       padding: const EdgeInsets.all(12),
