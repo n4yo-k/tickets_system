@@ -90,16 +90,24 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
 
                 return Card(
                   margin: const EdgeInsets.only(bottom: 8),
-                  child: RadioListTile<String>(
-                    value: status,
-                    groupValue: _selectedStatus,
-                    onChanged: (value) {
-                      setState(() => _selectedStatus = value!);
-                    },
+                  child: ListTile(
+                    // ignore: deprecated_member_use
+                    leading: Radio<String>(
+                      // ignore: deprecated_member_use
+                      value: status,
+                      // ignore: deprecated_member_use
+                      groupValue: _selectedStatus,
+                      // ignore: deprecated_member_use
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => _selectedStatus = value);
+                        }
+                      },
+                    ),
                     title: Text(status.toUpperCase()),
                     subtitle: Text(_getStatusDescription(status)),
                     tileColor: isSelected
-                        ? _getStatusColor(status).withOpacity(0.1)
+                        ? _getStatusColor(status).withValues(alpha: 0.1)
                         : null,
                   ),
                 );

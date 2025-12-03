@@ -80,14 +80,34 @@ class TicketService {
   // Actualizar estado del ticket
   Future<void> updateTicketStatus(String ticketId, String newStatus) async {
     try {
-      await _supabaseClient
-          .from('tickets')
-          .update({
-            'status': newStatus,
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .eq('id', ticketId);
+      debugPrint('🔧 Actualizando estado del ticket $ticketId a $newStatus');
+      
+      // Usar RPC para mayor seguridad (similar a assignTicketToTechnician)
+      final response = await _supabaseClient.rpc(
+        'update_ticket_status',
+        params: {
+          'p_ticket_id': ticketId,
+          'p_new_status': newStatus,
+        },
+      );
+
+      debugPrint('✅ Respuesta RPC: $response');
+
+      if (response is List && response.isNotEmpty) {
+        final result = response.first as Map;
+        final success = result['success'] as bool?;
+        final message = result['message'] as String?;
+
+        if (success == true) {
+          debugPrint('✅ Estado actualizado exitosamente: $message');
+        } else {
+          throw Exception('Error en RPC: $message');
+        }
+      } else {
+        throw Exception('Respuesta inesperada de RPC');
+      }
     } catch (e) {
+      debugPrint('❌ Error al actualizar ticket: $e');
       throw Exception('Error al actualizar ticket: $e');
     }
   }
@@ -213,27 +233,78 @@ class TicketService {
         throw Exception('Usuario no autenticado');
       }
 
-      // Obtener ID del técnico
-      final techResponse = await _supabaseClient
-          .from('technicians')
-          .select('id')
-          .eq('user_id', userId)
-          .single();
+      debugPrint('🔍 Obteniendo tickets asignados al técnico...');
 
-      final technicianId = techResponse['id'] as String;
+      String technicianId = '';
+
+      // Intentar obtener ID del técnico de la tabla technicians
+      try {
+        final techResponse = await _supabaseClient
+            .from('technicians')
+            .select('id')
+            .eq('user_id', userId)
+            .single();
+
+        technicianId = techResponse['id'] as String;
+        debugPrint('✅ Técnico encontrado en tabla technicians: $technicianId');
+      } catch (e) {
+        debugPrint('⚠️ No encontrado en technicians, buscando fallback...');
+        
+        // Fallback: obtener ID del técnico desde profiles
+        try {
+          final profileResponse = await _supabaseClient
+              .from('technicians')
+              .select('id')
+              .eq('user_id', userId);
+
+          if ((profileResponse as List).isNotEmpty) {
+            technicianId = profileResponse.first['id'] as String;
+            debugPrint('✅ Técnico encontrado con fallback: $technicianId');
+          } else {
+            debugPrint('❌ Técnico no encontrado en ninguna tabla');
+            return [];
+          }
+        } catch (fallbackError) {
+          debugPrint('❌ Error en fallback: $fallbackError');
+          return [];
+        }
+      }
 
       // Obtener tickets asignados a este técnico
+      debugPrint('🎫 Buscando tickets asignados a técnico: $technicianId');
+      debugPrint('🆔 User ID logueado: $userId');
+      
+      // Primero, obtener TODOS los tickets para ver cuáles tienen assigned_to
+      final allTickets = await _supabaseClient
+          .from('tickets')
+          .select('id, title, assigned_to')
+          .order('created_at', ascending: false);
+      
+      debugPrint('📊 Total de tickets en BD: ${(allTickets as List).length}');
+      for (var ticket in allTickets as List) {
+        final assignedTo = ticket['assigned_to'];
+        debugPrint('   - ${ticket['title']} | assigned_to: $assignedTo (tipo: ${assignedTo?.runtimeType})');
+      }
+      
+      // Ahora hacer la búsqueda con el filtro
+      debugPrint('🔎 Filtrando por assigned_to = "$technicianId"...');
       final response = await _supabaseClient
           .from('tickets')
           .select()
           .eq('assigned_to', technicianId)
           .order('created_at', ascending: false);
 
-      return (response as List)
+      final tickets = (response as List)
           .map((e) => Ticket.fromJson(e as Map<String, dynamic>))
           .toList();
+
+      debugPrint('📋 Se encontraron ${tickets.length} tickets asignados al técnico');
+      if (tickets.isEmpty) {
+        debugPrint('⚠️ No hay coincidencias. Verifica que assigned_to coincida exactamente con: $technicianId');
+      }
+      return tickets;
     } catch (e) {
-      debugPrint('Error al obtener tickets del técnico: $e');
+      debugPrint('❌ Error al obtener tickets del técnico: $e');
       return [];
     }
   }

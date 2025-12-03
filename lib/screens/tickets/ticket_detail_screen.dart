@@ -62,7 +62,7 @@ class TicketDetailScreen extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: _getStatusColor(ticket.status).withOpacity(0.2),
+                    color: _getStatusColor(ticket.status).withValues(alpha: 0.2),
                     border: Border.all(color: _getStatusColor(ticket.status)),
                     borderRadius: BorderRadius.circular(12),
                   ),
@@ -189,7 +189,7 @@ class TicketDetailScreen extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: highlightColor.withOpacity(0.2),
+              color: highlightColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(

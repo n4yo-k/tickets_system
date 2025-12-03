@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../services/ticket_service.dart';
 import '../../models/ticket.dart';
+import '../../utils/theme_utils.dart';
 import 'update_status_screen.dart';
 
 class TechnicianScreen extends StatefulWidget {
-  const TechnicianScreen({super.key});
+  final VoidCallback? onLogout;
+
+  const TechnicianScreen({this.onLogout, super.key});
 
   @override
   State<TechnicianScreen> createState() => _TechnicianScreenState();
@@ -27,6 +30,20 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
       appBar: AppBar(
         title: const Text('Panel Técnico'),
         centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: ThemeUtils.primaryGradient,
+          ),
+        ),
+        actions: [
+          if (widget.onLogout != null)
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              onPressed: widget.onLogout,
+              tooltip: 'Cerrar sesión',
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -45,8 +62,8 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
           ),
           // Lista de tickets
           Expanded(
-            child: FutureBuilder<List<Ticket>>(
-              future: _ticketService.getTechnicianTickets(),
+            child: StreamBuilder<List<Ticket>>(
+              stream: _buildTechnicianTicketsStream(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(child: CircularProgressIndicator());
@@ -168,7 +185,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(ticket.status).withOpacity(0.1),
+                        color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
                         border: Border.all(
                           color: _getStatusColor(ticket.status),
                         ),
@@ -292,6 +309,21 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
         return Colors.red;
       default:
         return Colors.grey;
+    }
+  }
+
+  // Stream para obtener tickets en tiempo real
+  Stream<List<Ticket>> _buildTechnicianTicketsStream() async* {
+    try {
+      while (true) {
+        final tickets = await _ticketService.getTechnicianTickets();
+        yield tickets;
+        // Actualizar cada 2 segundos
+        await Future.delayed(const Duration(seconds: 2));
+      }
+    } catch (e) {
+      debugPrint('Error en stream de tickets: $e');
+      yield [];
     }
   }
 }

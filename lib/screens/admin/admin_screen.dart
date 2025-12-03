@@ -5,9 +5,12 @@ import '../../services/ticket_service.dart';
 import '../../services/ticket_history_service.dart';
 import '../../models/ticket.dart';
 import '../../models/technician.dart';
+import '../../utils/theme_utils.dart';
 
 class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+  final VoidCallback? onLogout;
+
+  const AdminScreen({this.onLogout, super.key});
 
   @override
   State<AdminScreen> createState() => _AdminScreenState();
@@ -34,6 +37,20 @@ class _AdminScreenState extends State<AdminScreen> {
       appBar: AppBar(
         title: const Text('Panel Administrador'),
         centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: ThemeUtils.primaryGradient,
+          ),
+        ),
+        actions: [
+          if (widget.onLogout != null)
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              onPressed: widget.onLogout,
+              tooltip: 'Cerrar sesión',
+            ),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -46,6 +63,7 @@ class _AdminScreenState extends State<AdminScreen> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: (index) => setState(() => _selectedIndex = index),
+        type: BottomNavigationBarType.fixed,
         items: const [
           BottomNavigationBarItem(
             icon: Icon(Icons.dashboard),
@@ -247,30 +265,69 @@ class _AdminScreenState extends State<AdminScreen> {
           future: _adminService.getActiveTechnicians(),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
+              return const SizedBox(
+                height: 100,
+                child: Center(child: CircularProgressIndicator()),
+              );
             }
 
             if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.error, color: Colors.red, size: 48),
+                  const SizedBox(height: 16),
+                  Text('Error: ${snapshot.error}'),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ],
+              );
             }
 
             final technicians = snapshot.data ?? [];
 
             if (technicians.isEmpty) {
-              return const Text('No hay técnicos disponibles');
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.warning, color: Colors.orange, size: 48),
+                  const SizedBox(height: 16),
+                  const Text('No hay técnicos disponibles'),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Por favor, crea un técnico primero',
+                    style: TextStyle(fontSize: 12, color: Colors.grey),
+                  ),
+                  const SizedBox(height: 16),
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text('Cerrar'),
+                  ),
+                ],
+              );
             }
 
             return SizedBox(
-              height: 200,
+              width: double.maxFinite,
               child: ListView.builder(
+                shrinkWrap: true,
                 itemCount: technicians.length,
                 itemBuilder: (context, index) {
                   final tech = technicians[index];
                   return ListTile(
+                    leading: const Icon(Icons.person),
                     title: Text(tech.fullName),
                     subtitle: Text(tech.email),
+                    trailing: Text(
+                      tech.specialization ?? 'General',
+                      style: const TextStyle(fontSize: 12),
+                    ),
                     onTap: () async {
                       try {
+                        Navigator.pop(context);
                         await _adminService.assignTicketToTechnician(
                           ticketId: ticket.id,
                           technicianId: tech.id,
@@ -281,21 +338,21 @@ class _AdminScreenState extends State<AdminScreen> {
                           technicianId: tech.id,
                         );
 
-                        if (mounted) {
-                          Navigator.pop(context);
-                          setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ticket asignado exitosamente'),
+                        setState(() {});
+
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Ticket asignado a ${tech.fullName}',
                             ),
-                          );
-                        }
+                          ),
+                        );
                       } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
-                          );
-                        }
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Error: $e')),
+                        );
                       }
                     },
                   );
@@ -304,6 +361,12 @@ class _AdminScreenState extends State<AdminScreen> {
             );
           },
         ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancelar'),
+          ),
+        ],
       ),
     );
   }
@@ -312,7 +375,7 @@ class _AdminScreenState extends State<AdminScreen> {
   Widget _buildStatCard(String label, String value, Color color) {
     return Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         border: Border.all(color: color),
         borderRadius: BorderRadius.circular(8),
       ),
