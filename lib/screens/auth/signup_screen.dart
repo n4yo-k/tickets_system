@@ -124,10 +124,7 @@ class _SignupScreenState extends State<SignupScreen> {
                 const SizedBox(height: 8),
                 const Text(
                   'Únete a nuestro sistema',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: Colors.white70, fontSize: 14),
                 ),
                 const SizedBox(height: 32),
                 // Form Container
@@ -249,9 +246,7 @@ class _SignupScreenState extends State<SignupScreen> {
                             ),
                             child: Text(
                               _successMessage!,
-                              style: TextStyle(
-                                color: Colors.green.shade900,
-                              ),
+                              style: TextStyle(color: Colors.green.shade900),
                             ),
                           ),
                           const SizedBox(height: 16),
@@ -317,8 +312,7 @@ class _SignupScreenState extends State<SignupScreen> {
                               onPressed: () {
                                 Navigator.of(context).pushAndRemoveUntil(
                                   MaterialPageRoute(
-                                    builder: (context) =>
-                                        const LoginScreen(),
+                                    builder: (context) => const LoginScreen(),
                                   ),
                                   (route) => false,
                                 );
