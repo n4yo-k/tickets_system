@@ -1,23 +1,46 @@
 {
-  "buildCommand": "flutter build web --release",
+  "buildCommand": "flutter build web --release --no-tree-shake-icons",
   "outputDirectory": "build/web",
   "env": {
     "FLUTTER_BUILD_MODE": "release"
   },
+  "functions": {
+    "api/**": {
+      "maxDuration": 60
+    }
+  },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/index.html",
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=3600"
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/main.dart.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/:path(.*\\.(?:js|css|woff2)$)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
         }
       ]
     }
   ],
   "rewrites": [
     {
-      "source": "/:path*",
+      "source": "/(.+)",
       "destination": "/index.html"
     }
   ]
