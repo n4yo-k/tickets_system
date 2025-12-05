@@ -32,9 +32,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
         centerTitle: true,
         elevation: 0,
         flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: ThemeUtils.primaryGradient,
-          ),
+          decoration: BoxDecoration(gradient: ThemeUtils.primaryGradient),
         ),
         actions: [
           if (widget.onLogout != null)
@@ -60,11 +58,15 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
 
           // Contar tickets por estado
           final totalAssigned = allTickets.length;
-          final inProgress = allTickets.where((t) => t.status == 'en_progreso').length;
+          final inProgress = allTickets
+              .where((t) => t.status == 'en_progreso')
+              .length;
 
           // Aplicar filtro
           if (_selectedFilter != 'todos') {
-            allTickets = allTickets.where((t) => t.status == _selectedFilter).toList();
+            allTickets = allTickets
+                .where((t) => t.status == _selectedFilter)
+                .toList();
           }
 
           return SingleChildScrollView(
@@ -101,10 +103,32 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: Row(
                     children: [
-                      _buildFilterChip('todos', 'Todos', snapshot.data?.length ?? 0),
-                      _buildFilterChip('abierto', 'Abiertos', snapshot.data?.where((t) => t.status == 'abierto').length ?? 0),
-                      _buildFilterChip('en_progreso', 'En Progreso', inProgress),
-                      _buildFilterChip('cerrado', 'Resueltos', snapshot.data?.where((t) => t.status == 'cerrado').length ?? 0),
+                      _buildFilterChip(
+                        'todos',
+                        'Todos',
+                        snapshot.data?.length ?? 0,
+                      ),
+                      _buildFilterChip(
+                        'abierto',
+                        'Abiertos',
+                        snapshot.data
+                                ?.where((t) => t.status == 'abierto')
+                                .length ??
+                            0,
+                      ),
+                      _buildFilterChip(
+                        'en_progreso',
+                        'En Progreso',
+                        inProgress,
+                      ),
+                      _buildFilterChip(
+                        'cerrado',
+                        'Resueltos',
+                        snapshot.data
+                                ?.where((t) => t.status == 'cerrado')
+                                .length ??
+                            0,
+                      ),
                     ],
                   ),
                 ),
@@ -254,10 +278,17 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
-                        border: Border.all(color: _getStatusColor(ticket.status)),
+                        color: _getStatusColor(
+                          ticket.status,
+                        ).withValues(alpha: 0.1),
+                        border: Border.all(
+                          color: _getStatusColor(ticket.status),
+                        ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -274,10 +305,7 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                 const SizedBox(height: 8),
                 Text(
                   ticket.description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade700),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -285,7 +313,10 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.blue.shade50,
                         border: Border.all(color: Colors.blue.shade200),
@@ -302,10 +333,17 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     ),
                     const SizedBox(width: 6),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: _getPriorityColor(ticket.priority).withValues(alpha: 0.2),
-                        border: Border.all(color: _getPriorityColor(ticket.priority)),
+                        color: _getPriorityColor(
+                          ticket.priority,
+                        ).withValues(alpha: 0.2),
+                        border: Border.all(
+                          color: _getPriorityColor(ticket.priority),
+                        ),
                         borderRadius: BorderRadius.circular(6),
                       ),
                       child: Text(
@@ -404,7 +442,9 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: _getStatusColor(ticket.status).withValues(alpha: 0.1),
+                        color: _getStatusColor(
+                          ticket.status,
+                        ).withValues(alpha: 0.1),
                         border: Border.all(
                           color: _getStatusColor(ticket.status),
                         ),
@@ -448,8 +488,8 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                     Text(
                       'Descripción',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Container(
@@ -460,13 +500,13 @@ class _TechnicianScreenState extends State<TechnicianScreen> {
                       ),
                       child: Text(ticket.description),
                     ),
-                    if (ticket.imageUrl != null && ticket.imageUrl!.isNotEmpty) ...[
+                    if (ticket.imageUrl != null &&
+                        ticket.imageUrl!.isNotEmpty) ...[
                       const SizedBox(height: 16),
                       Text(
                         'Adjunto',
-                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
+                        style: Theme.of(context).textTheme.titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
                       // Mostrar imagen

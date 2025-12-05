@@ -119,8 +119,12 @@ class _AdminScreenState extends State<AdminScreen> {
 
         final totalCount = tickets.length;
         final pendingCount = tickets.where((t) => t.status == 'abierto').length;
-        final inProgressCount = tickets.where((t) => t.status == 'en_progreso').length;
-        final resolvedCount = tickets.where((t) => t.status == 'cerrado').length;
+        final inProgressCount = tickets
+            .where((t) => t.status == 'en_progreso')
+            .length;
+        final resolvedCount = tickets
+            .where((t) => t.status == 'cerrado')
+            .length;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
@@ -170,11 +174,26 @@ class _AdminScreenState extends State<AdminScreen> {
                       ),
                     ),
                     const SizedBox(height: 16),
-                    _buildStatusRow('Abiertos', pendingCount, 'Nuevos tickets', Colors.orange),
+                    _buildStatusRow(
+                      'Abiertos',
+                      pendingCount,
+                      'Nuevos tickets',
+                      Colors.orange,
+                    ),
                     const SizedBox(height: 12),
-                    _buildStatusRow('En Progreso', inProgressCount, 'En atención', Colors.blue),
+                    _buildStatusRow(
+                      'En Progreso',
+                      inProgressCount,
+                      'En atención',
+                      Colors.blue,
+                    ),
                     const SizedBox(height: 12),
-                    _buildStatusRow('Cerrados', resolvedCount, 'Resueltos', Colors.green),
+                    _buildStatusRow(
+                      'Cerrados',
+                      resolvedCount,
+                      'Resueltos',
+                      Colors.green,
+                    ),
                   ],
                 ),
               ),
@@ -216,7 +235,11 @@ class _AdminScreenState extends State<AdminScreen> {
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.warning, color: Colors.orange.shade700, size: 20),
+                    Icon(
+                      Icons.warning,
+                      color: Colors.orange.shade700,
+                      size: 20,
+                    ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
@@ -304,7 +327,12 @@ class _AdminScreenState extends State<AdminScreen> {
     );
   }
 
-  Widget _buildStatusRow(String status, int count, String subtitle, Color color) {
+  Widget _buildStatusRow(
+    String status,
+    int count,
+    String subtitle,
+    Color color,
+  ) {
     return Row(
       children: [
         Icon(Icons.circle, color: color, size: 12),
@@ -313,10 +341,7 @@ class _AdminScreenState extends State<AdminScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                status,
-                style: const TextStyle(fontWeight: FontWeight.w600),
-              ),
+              Text(status, style: const TextStyle(fontWeight: FontWeight.w600)),
               Text(
                 subtitle,
                 style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
@@ -482,8 +507,9 @@ class _AdminScreenState extends State<AdminScreen> {
                                             border: Border.all(
                                               color: Colors.red.shade300,
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
                                             'Abierto',
@@ -509,8 +535,9 @@ class _AdminScreenState extends State<AdminScreen> {
                                                 ticket.priority,
                                               ),
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
                                             ticket.priority,
@@ -534,8 +561,9 @@ class _AdminScreenState extends State<AdminScreen> {
                                             border: Border.all(
                                               color: Colors.blue.shade300,
                                             ),
-                                            borderRadius:
-                                                BorderRadius.circular(4),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
                                           ),
                                           child: Text(
                                             ticket.category,
@@ -553,8 +581,7 @@ class _AdminScreenState extends State<AdminScreen> {
                               ),
                               const SizedBox(width: 8),
                               ElevatedButton(
-                                onPressed: () =>
-                                    _showAssignDialog(ticket),
+                                onPressed: () => _showAssignDialog(ticket),
                                 style: ElevatedButton.styleFrom(
                                   padding: const EdgeInsets.symmetric(
                                     horizontal: 12,
@@ -619,9 +646,15 @@ class _AdminScreenState extends State<AdminScreen> {
         }
 
         final allTickets = snapshot.data ?? [];
-        final openTickets = allTickets.where((t) => t.status == 'abierto').length;
-        final inProgressTickets = allTickets.where((t) => t.status == 'en_progreso').length;
-        final closedTickets = allTickets.where((t) => t.status == 'cerrado').length;
+        final openTickets = allTickets
+            .where((t) => t.status == 'abierto')
+            .length;
+        final inProgressTickets = allTickets
+            .where((t) => t.status == 'en_progreso')
+            .length;
+        final closedTickets = allTickets
+            .where((t) => t.status == 'cerrado')
+            .length;
 
         return SingleChildScrollView(
           child: Column(
@@ -679,10 +712,7 @@ class _AdminScreenState extends State<AdminScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   '${allTickets.length} tickets',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
                 ),
               ),
               const SizedBox(height: 12),
@@ -713,14 +743,12 @@ class _AdminScreenState extends State<AdminScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Row(
-                            mainAxisAlignment:
-                                MainAxisAlignment.spaceBetween,
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Expanded(
                                 child: Column(
-                                  crossAxisAlignment:
-                                      CrossAxisAlignment.start,
+                                  crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
                                       ticket.title,
@@ -749,11 +777,11 @@ class _AdminScreenState extends State<AdminScreen> {
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: _getStatusColor(ticket.status)
-                                      .withValues(alpha: 0.1),
+                                  color: _getStatusColor(
+                                    ticket.status,
+                                  ).withValues(alpha: 0.1),
                                   border: Border.all(
-                                    color:
-                                        _getStatusColor(ticket.status),
+                                    color: _getStatusColor(ticket.status),
                                   ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
@@ -777,12 +805,11 @@ class _AdminScreenState extends State<AdminScreen> {
                                   vertical: 2,
                                 ),
                                 decoration: BoxDecoration(
-                                  color:
-                                      _getPriorityColor(ticket.priority)
-                                          .withValues(alpha: 0.2),
+                                  color: _getPriorityColor(
+                                    ticket.priority,
+                                  ).withValues(alpha: 0.2),
                                   border: Border.all(
-                                    color:
-                                        _getPriorityColor(ticket.priority),
+                                    color: _getPriorityColor(ticket.priority),
                                   ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
@@ -790,9 +817,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                   ticket.priority,
                                   style: TextStyle(
                                     fontSize: 10,
-                                    color: _getPriorityColor(
-                                      ticket.priority,
-                                    ),
+                                    color: _getPriorityColor(ticket.priority),
                                     fontWeight: FontWeight.w500,
                                   ),
                                 ),
@@ -833,10 +858,7 @@ class _AdminScreenState extends State<AdminScreen> {
             ),
             Text(
               '($count)',
-              style: const TextStyle(
-                fontSize: 10,
-                color: Colors.white,
-              ),
+              style: const TextStyle(fontSize: 10, color: Colors.white),
             ),
           ],
         ),
@@ -903,7 +925,11 @@ class _AdminScreenState extends State<AdminScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.error, color: Colors.red, size: 48),
+                            const Icon(
+                              Icons.error,
+                              color: Colors.red,
+                              size: 48,
+                            ),
                             const SizedBox(height: 16),
                             Text('Error: ${snapshot.error}'),
                           ],
@@ -919,13 +945,20 @@ class _AdminScreenState extends State<AdminScreen> {
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.warning, color: Colors.orange, size: 48),
+                            const Icon(
+                              Icons.warning,
+                              color: Colors.orange,
+                              size: 48,
+                            ),
                             const SizedBox(height: 16),
                             const Text('No hay técnicos disponibles'),
                             const SizedBox(height: 8),
                             const Text(
                               'Por favor, crea un técnico primero',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
                               textAlign: TextAlign.center,
                             ),
                           ],
@@ -946,8 +979,7 @@ class _AdminScreenState extends State<AdminScreen> {
                               onTap: () async {
                                 try {
                                   Navigator.pop(context);
-                                  await _adminService
-                                      .assignTicketToTechnician(
+                                  await _adminService.assignTicketToTechnician(
                                     ticketId: ticket.id,
                                     technicianId: tech.id,
                                   );
@@ -962,16 +994,16 @@ class _AdminScreenState extends State<AdminScreen> {
                                   if (!context.mounted) return;
                                   ScaffoldMessenger.of(context).showSnackBar(
                                     SnackBar(
-                                      content:
-                                          Text('Ticket asignado a ${tech.fullName}'),
+                                      content: Text(
+                                        'Ticket asignado a ${tech.fullName}',
+                                      ),
                                     ),
                                   );
                                 } catch (e) {
                                   if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context)
-                                      .showSnackBar(SnackBar(
-                                    content: Text('Error: $e'),
-                                  ));
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
                                 }
                               },
                               child: Container(
@@ -990,8 +1022,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                       height: 40,
                                       decoration: BoxDecoration(
                                         color: Colors.blue,
-                                        borderRadius:
-                                            BorderRadius.circular(8),
+                                        borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
                                         Icons.person,
@@ -1028,8 +1059,7 @@ class _AdminScreenState extends State<AdminScreen> {
                                       ),
                                       decoration: BoxDecoration(
                                         color: Colors.blue,
-                                        borderRadius:
-                                            BorderRadius.circular(4),
+                                        borderRadius: BorderRadius.circular(4),
                                       ),
                                       child: Text(
                                         'Tickets\n${technicians.length}',

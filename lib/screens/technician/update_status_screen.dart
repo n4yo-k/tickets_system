@@ -77,8 +77,9 @@ class _UpdateStatusScreenState extends State<UpdateStatusScreen> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: _getStatusColor(widget.ticket.status)
-                              .withValues(alpha: 0.1),
+                          color: _getStatusColor(
+                            widget.ticket.status,
+                          ).withValues(alpha: 0.1),
                           border: Border.all(
                             color: _getStatusColor(widget.ticket.status),
                           ),
