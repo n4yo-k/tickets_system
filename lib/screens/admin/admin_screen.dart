@@ -5,9 +5,12 @@ import '../../services/ticket_service.dart';
 import '../../services/ticket_history_service.dart';
 import '../../models/ticket.dart';
 import '../../models/technician.dart';
+import '../../utils/theme_utils.dart';
 
 class AdminScreen extends StatefulWidget {
-  const AdminScreen({super.key});
+  final VoidCallback? onLogout;
+
+  const AdminScreen({this.onLogout, super.key});
 
   @override
   State<AdminScreen> createState() => _AdminScreenState();
@@ -17,7 +20,7 @@ class _AdminScreenState extends State<AdminScreen> {
   late AdminService _adminService;
   late TicketService _ticketService;
   late TicketHistoryService _historyService;
-  
+
   int _selectedIndex = 0;
 
   @override
@@ -34,6 +37,35 @@ class _AdminScreenState extends State<AdminScreen> {
       appBar: AppBar(
         title: const Text('Panel Administrador'),
         centerTitle: true,
+        elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(gradient: ThemeUtils.primaryGradient),
+        ),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(50),
+          child: Container(
+            color: Colors.white,
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Row(
+                children: [
+                  _buildTabButton('Dashboard', 0),
+                  _buildTabButton('Asignar', 1),
+                  _buildTabButton('Tickets', 2),
+                ],
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          if (widget.onLogout != null)
+            IconButton(
+              icon: const Icon(Icons.logout_rounded),
+              onPressed: widget.onLogout,
+              tooltip: 'Cerrar sesión',
+            ),
+        ],
       ),
       body: IndexedStack(
         index: _selectedIndex,
@@ -43,23 +75,29 @@ class _AdminScreenState extends State<AdminScreen> {
           _buildTicketsPanel(),
         ],
       ),
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: (index) => setState(() => _selectedIndex = index),
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard),
-            label: 'Dashboard',
+    );
+  }
+
+  Widget _buildTabButton(String label, int index) {
+    final isSelected = _selectedIndex == index;
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+      child: GestureDetector(
+        onTap: () => setState(() => _selectedIndex = index),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: isSelected ? Colors.blue : Colors.transparent,
+            borderRadius: BorderRadius.circular(6),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.assignment_ind),
-            label: 'Asignar',
+          child: Text(
+            label,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.grey.shade700,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+            ),
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.list),
-            label: 'Tickets',
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -78,75 +116,286 @@ class _AdminScreenState extends State<AdminScreen> {
         }
 
         final tickets = snapshot.data ?? [];
-        
+
+        final totalCount = tickets.length;
         final pendingCount = tickets.where((t) => t.status == 'abierto').length;
-        final inProgressCount = tickets.where((t) => t.status == 'en_progreso').length;
-        final resolvedCount = tickets.where((t) => t.status == 'cerrado').length;
-        final unassignedCount = tickets.where((t) => t.status == 'abierto').length;
+        final inProgressCount = tickets
+            .where((t) => t.status == 'en_progreso')
+            .length;
+        final resolvedCount = tickets
+            .where((t) => t.status == 'cerrado')
+            .length;
 
         return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Resumen General',
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 16),
-              // Stats Cards
-              GridView.count(
-                crossAxisCount: 2,
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
+              // Top Cards
+              Row(
                 children: [
-                  _buildStatCard('Total Tickets', tickets.length.toString(), Colors.blue),
-                  _buildStatCard('Abiertos', pendingCount.toString(), Colors.orange),
-                  _buildStatCard('En Progreso', inProgressCount.toString(), Colors.purple),
-                  _buildStatCard('Resueltos', resolvedCount.toString(), Colors.green),
-                  _buildStatCard('Sin Asignar', unassignedCount.toString(), Colors.red),
-                  _buildStatCard('% Resueltos', 
-                    '${(resolvedCount / (tickets.isEmpty ? 1 : tickets.length) * 100).toStringAsFixed(1)}%', 
-                    Colors.teal
+                  Expanded(
+                    child: _buildTopCard(
+                      icon: Icons.list,
+                      label: 'Total Tickets',
+                      value: totalCount.toString(),
+                      color: Colors.blue,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _buildTopCard(
+                      icon: Icons.people,
+                      label: 'Técnicos Activos',
+                      value: '3',
+                      color: Colors.purple,
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 24),
-              Text(
-                'Actividad Reciente',
-                style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-              ),
-              const SizedBox(height: 12),
-              // Últimos tickets
-              ListView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: tickets.take(5).length,
-                itemBuilder: (context, index) {
-                  final ticket = tickets[index];
-                  return Card(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    child: ListTile(
-                      title: Text(ticket.title),
-                      subtitle: Text('${ticket.category} • ${ticket.priority}'),
-                      trailing: Chip(
-                        label: Text(ticket.status),
-                        backgroundColor: _getStatusColor(ticket.status),
+              const SizedBox(height: 16),
+              // Estado de Tickets
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Estado de Tickets',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
                       ),
                     ),
-                  );
-                },
+                    const SizedBox(height: 16),
+                    _buildStatusRow(
+                      'Abiertos',
+                      pendingCount,
+                      'Nuevos tickets',
+                      Colors.orange,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatusRow(
+                      'En Progreso',
+                      inProgressCount,
+                      'En atención',
+                      Colors.blue,
+                    ),
+                    const SizedBox(height: 12),
+                    _buildStatusRow(
+                      'Cerrados',
+                      resolvedCount,
+                      'Resueltos',
+                      Colors.green,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Tickets por Categoría
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  border: Border.all(color: Colors.grey.shade200),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Tickets por Categoría',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.grey.shade800,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    _buildCategoryRow('Tecnología', 3, Colors.blue),
+                    const SizedBox(height: 12),
+                    _buildCategoryRow('Administrativo', 3, Colors.purple),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Alerta
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  border: Border.all(color: Colors.orange.shade200),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.warning,
+                      color: Colors.orange.shade700,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Tickets sin asignar',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange.shade700,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Text(
+                            'Hay $pendingCount tickets esperando ser asignados a un técnico.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.orange.shade600,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildTopCard({
+    required IconData icon,
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.7)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: Colors.white, size: 24),
+              const Spacer(),
+              Text(
+                label,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 32,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatusRow(
+    String status,
+    int count,
+    String subtitle,
+    Color color,
+  ) {
+    return Row(
+      children: [
+        Icon(Icons.circle, color: color, size: 12),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(status, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(
+                subtitle,
+                style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+              ),
+            ],
+          ),
+        ),
+        Text(
+          count.toString(),
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+            color: color,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCategoryRow(String category, int count, Color color) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            category,
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+        ),
+        Container(
+          width: MediaQuery.of(context).size.width * 0.4,
+          height: 6,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade200,
+            borderRadius: BorderRadius.circular(3),
+          ),
+          child: Stack(
+            children: [
+              Container(
+                width: MediaQuery.of(context).size.width * 0.2,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        Text(
+          count.toString(),
+          style: const TextStyle(fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 
@@ -170,7 +419,11 @@ class _AdminScreenState extends State<AdminScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle, size: 64, color: Colors.green.shade300),
+                Icon(
+                  Icons.check_circle,
+                  size: 64,
+                  color: Colors.green.shade300,
+                ),
                 const SizedBox(height: 16),
                 const Text('¡Todos los tickets están asignados!'),
               ],
@@ -178,26 +431,205 @@ class _AdminScreenState extends State<AdminScreen> {
           );
         }
 
-        return ListView.builder(
+        return SingleChildScrollView(
           padding: const EdgeInsets.all(16),
-          itemCount: unassignedTickets.length,
-          itemBuilder: (context, index) {
-            final ticket = unassignedTickets[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                title: Text(ticket.title),
-                subtitle: Text(ticket.description),
-                trailing: ElevatedButton(
-                  onPressed: () => _showAssignDialog(ticket),
-                  child: const Text('Asignar'),
+          child: Column(
+            children: [
+              // Alerta de tickets sin asignar
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.shade50,
+                  border: Border.all(color: Colors.blue.shade200),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info, color: Colors.blue.shade700, size: 20),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'Necesito acceso al sistema de nómina para hacer mi trabajo. Mi usuario no tiene permisos.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.blue.shade700,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            );
-          },
+              const SizedBox(height: 16),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: unassignedTickets.length,
+                itemBuilder: (context, index) {
+                  final ticket = unassignedTickets[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ticket.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Row(
+                                      children: [
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.red.shade100,
+                                            border: Border.all(
+                                              color: Colors.red.shade300,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            'Abierto',
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.red.shade700,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: _getPriorityColor(
+                                              ticket.priority,
+                                            ).withValues(alpha: 0.2),
+                                            border: Border.all(
+                                              color: _getPriorityColor(
+                                                ticket.priority,
+                                              ),
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            ticket.priority,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: _getPriorityColor(
+                                                ticket.priority,
+                                              ),
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6,
+                                            vertical: 2,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.blue.shade100,
+                                            border: Border.all(
+                                              color: Colors.blue.shade300,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              4,
+                                            ),
+                                          ),
+                                          child: Text(
+                                            ticket.category,
+                                            style: TextStyle(
+                                              fontSize: 10,
+                                              color: Colors.blue.shade700,
+                                              fontWeight: FontWeight.w500,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              ElevatedButton(
+                                onPressed: () => _showAssignDialog(ticket),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
+                                  backgroundColor: Colors.blue,
+                                ),
+                                child: const Text(
+                                  'Asignar',
+                                  style: TextStyle(fontSize: 12),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            ticket.description,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: Colors.grey.shade700,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
         );
       },
     );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'baja':
+        return Colors.green;
+      case 'media':
+        return Colors.orange;
+      case 'alta':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
   }
 
   // Todos los tickets
@@ -213,27 +645,224 @@ class _AdminScreenState extends State<AdminScreen> {
           return Center(child: Text('Error: ${snapshot.error}'));
         }
 
-        final tickets = snapshot.data ?? [];
+        final allTickets = snapshot.data ?? [];
+        final openTickets = allTickets
+            .where((t) => t.status == 'abierto')
+            .length;
+        final inProgressTickets = allTickets
+            .where((t) => t.status == 'en_progreso')
+            .length;
+        final closedTickets = allTickets
+            .where((t) => t.status == 'cerrado')
+            .length;
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: tickets.length,
-          itemBuilder: (context, index) {
-            final ticket = tickets[index];
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              child: ListTile(
-                title: Text(ticket.title),
-                subtitle: Text('${ticket.category} • ${ticket.priority}'),
-                trailing: Chip(
-                  label: Text(ticket.status),
-                  backgroundColor: _getStatusColor(ticket.status),
+        return SingleChildScrollView(
+          child: Column(
+            children: [
+              // Barra de búsqueda
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: TextField(
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por título, descripción o usuario...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: Colors.grey.shade300),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                  ),
                 ),
               ),
-            );
-          },
+              // Filtros por estado
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Filtrar por estado',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        _buildFilterButton('Todos', allTickets.length),
+                        const SizedBox(width: 8),
+                        _buildFilterButton('Abiertos', openTickets),
+                        const SizedBox(width: 8),
+                        _buildFilterButton('En Progreso', inProgressTickets),
+                        const SizedBox(width: 8),
+                        _buildFilterButton('Cerrados', closedTickets),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              // Lista de tickets
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Text(
+                  '${allTickets.length} tickets',
+                  style: TextStyle(fontSize: 13, color: Colors.grey.shade600),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ListView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: allTickets.length,
+                itemBuilder: (context, index) {
+                  final ticket = allTickets[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        border: Border.all(color: Colors.grey.shade200),
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(12),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      ticket.title,
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      ticket.category,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color: Colors.grey.shade600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(
+                                    ticket.status,
+                                  ).withValues(alpha: 0.1),
+                                  border: Border.all(
+                                    color: _getStatusColor(ticket.status),
+                                  ),
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  ticket.status,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    color: _getStatusColor(ticket.status),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: _getPriorityColor(
+                                    ticket.priority,
+                                  ).withValues(alpha: 0.2),
+                                  border: Border.all(
+                                    color: _getPriorityColor(ticket.priority),
+                                  ),
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  ticket.priority,
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    color: _getPriorityColor(ticket.priority),
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildFilterButton(String label, int count) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8),
+        decoration: BoxDecoration(
+          color: Colors.blue,
+          borderRadius: BorderRadius.circular(6),
+        ),
+        child: Column(
+          children: [
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 11,
+                color: Colors.white,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            Text(
+              '($count)',
+              style: const TextStyle(fontSize: 10, color: Colors.white),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -241,96 +870,221 @@ class _AdminScreenState extends State<AdminScreen> {
   void _showAssignDialog(Ticket ticket) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Asignar Ticket'),
-        content: FutureBuilder<List<Technician>>(
-          future: _adminService.getActiveTechnicians(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return const CircularProgressIndicator();
-            }
-
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-
-            final technicians = snapshot.data ?? [];
-
-            if (technicians.isEmpty) {
-              return const Text('No hay técnicos disponibles');
-            }
-
-            return SizedBox(
-              height: 200,
-              child: ListView.builder(
-                itemCount: technicians.length,
-                itemBuilder: (context, index) {
-                  final tech = technicians[index];
-                  return ListTile(
-                    title: Text(tech.fullName),
-                    subtitle: Text(tech.email),
-                    onTap: () async {
-                      try {
-                        await _adminService.assignTicketToTechnician(
-                          ticketId: ticket.id,
-                          technicianId: tech.id,
-                        );
-                        
-                        await _historyService.recordAssignment(
-                          ticketId: ticket.id,
-                          technicianId: tech.id,
-                        );
-
-                        if (mounted) {
-                          Navigator.pop(context);
-                          setState(() {});
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Ticket asignado exitosamente'),
-                            ),
-                          );
-                        }
-                      } catch (e) {
-                        if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error: $e')),
-                          );
-                        }
-                      }
-                    },
-                  );
-                },
+      builder: (context) => Dialog(
+        insetPadding: const EdgeInsets.all(16),
+        child: Container(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(12)),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: ThemeUtils.primaryGradient,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(12),
+                    topRight: Radius.circular(12),
+                  ),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Seleccionar Técnico',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context),
+                      child: const Icon(Icons.close, color: Colors.white),
+                    ),
+                  ],
+                ),
               ),
-            );
-          },
-        ),
-      ),
-    );
-  }
+              // Content
+              Flexible(
+                child: FutureBuilder<List<Technician>>(
+                  future: _adminService.getActiveTechnicians(),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32),
+                          child: CircularProgressIndicator(),
+                        ),
+                      );
+                    }
 
-  // Helper: Stat Card
-  Widget _buildStatCard(String label, String value, Color color) {
-    return Container(
-      decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
-        border: Border.all(color: color),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(label, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
+                    if (snapshot.hasError) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.error,
+                              color: Colors.red,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 16),
+                            Text('Error: ${snapshot.error}'),
+                          ],
+                        ),
+                      );
+                    }
+
+                    final technicians = snapshot.data ?? [];
+
+                    if (technicians.isEmpty) {
+                      return Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.warning,
+                              color: Colors.orange,
+                              size: 48,
+                            ),
+                            const SizedBox(height: 16),
+                            const Text('No hay técnicos disponibles'),
+                            const SizedBox(height: 8),
+                            const Text(
+                              'Por favor, crea un técnico primero',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      padding: const EdgeInsets.all(16),
+                      itemCount: technicians.length,
+                      itemBuilder: (context, index) {
+                        final tech = technicians[index];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: Material(
+                            child: InkWell(
+                              onTap: () async {
+                                try {
+                                  Navigator.pop(context);
+                                  await _adminService.assignTicketToTechnician(
+                                    ticketId: ticket.id,
+                                    technicianId: tech.id,
+                                  );
+
+                                  await _historyService.recordAssignment(
+                                    ticketId: ticket.id,
+                                    technicianId: tech.id,
+                                  );
+
+                                  setState(() {});
+
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        'Ticket asignado a ${tech.fullName}',
+                                      ),
+                                    ),
+                                  );
+                                } catch (e) {
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Error: $e')),
+                                  );
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.blue.shade50,
+                                  border: Border.all(
+                                    color: Colors.blue.shade200,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 40,
+                                      height: 40,
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.person,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            tech.fullName,
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                          Text(
+                                            tech.email,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              color: Colors.grey.shade600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: Colors.blue,
+                                        borderRadius: BorderRadius.circular(4),
+                                      ),
+                                      child: Text(
+                                        'Tickets\n${technicians.length}',
+                                        style: const TextStyle(
+                                          fontSize: 10,
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.w500,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
